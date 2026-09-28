@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Màn hình Chủ Quán</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #2f3542; color: white; }
+        .order-card { background: #ff4757; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        h2 { border-bottom: 2px solid white; padding-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <h2>🔔 DANH SÁCH ORDER MỚI</h2>
+    <div id="khungOrder">Đang chờ khách đặt món...</div>
+
+    <!-- Âm thanh chuông báo -->
+    <audio id="chuongBao" src="https://www.myinstants.com/media/sounds/bell-ring-ifa.mp3"></audio>
+
+    <script>
+        let url = "https://chualanh-f51a9-default-rtdb.firebaseio.com/orders.json"; //[cite: 6]
+        let daThongBao = new Set();
+
+        async function kiemTraOrder() {
+            try {
+                let res = await fetch(url);
+                let data = await res.json();
+                let khung = document.getElementById('khungOrder');
+                khung.innerHTML = '';
+
+                if (data) {
+                    let coOrderMoi = false;
+                    for (let id in data) {
+                        let item = data[id];
+                        khung.innerHTML += `
+                            <div class="order-card">
+                                <h3>📍 ${item.ban}</h3>
+                                <p><strong>Món:</strong> ${item.mon.join(', ')}</p>
+                                <p><em>Thời gian: ${item.thoiGian}</em></p>
+                            </div>
+                        `;
+                        // Nếu là order mới chưa duyệt qua thì reo chuông
+                        if (!daThongBao.has(id)) {
+                            daThongBao.add(id);
+                            coOrderMoi = true;
+                        }
+                    }
+                    if (coOrderMoi) {
+                        document.getElementById('chuongBao').play().catch(e => console.log("Cần chạm vào màn hình để bật âm thanh"));
+                    }
+                }
+            } catch(e) { console.log(e); }
+        }
+
+        // Tự động kiểm tra order mới mỗi 3 giây
+        setInterval(kiemTraOrder, 3000);
+    </script>
+</body>
+</html>
